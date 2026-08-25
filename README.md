@@ -165,3 +165,9 @@ The project still needs usability testing and interface simplification. File att
 
 My next priority would be improving the audit experience itself rather than adding more features.
 
+## License
+
+Copyright © 2026 Veronika Katasonova. All rights reserved.
+
+This repository is shared for portfolio and evaluation purposes.  
+No permission is granted to redistribute, modify, or use the project commercially.
