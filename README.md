@@ -1,201 +1,167 @@
 # Velar Diagnostic App
 
-**Prototype v0.4 · internal business-audit workspace**
+Velar Diagnostic App is a prototype of an internal tool I built for conducting structured business audits.
 
-Velar Diagnostic App turns the Velar Diagnostic Playbook into a working audit workflow:
+The project started as an Excel diagnostic playbook. I wanted to move the same workflow into a web application so that audits could be created, stored, reviewed and turned into a client report in one place.
 
-**Client Profile → Diagnosis → Primary Constraint → Findings → Roadmap → Client Report**
+The main idea behind the project is to look at a business as one connected flow:
 
-This repository contains a working prototype, not a finished commercial product. The goal of the current version is to validate the audit logic, data model, prioritization workflow and report generation before a future UI/product redesign.
+**Marketing → Sales → Operations → Finance → Profit**
 
-## What the application does
+The application helps an auditor review possible problems across this flow, record evidence, evaluate their impact, identify the main constraint and build a prioritized action plan.
 
-- creates and stores separate business audits;
-- captures client context, baseline metrics, data availability and audit scope;
-- loads a library of **175 diagnostic hypotheses** across Marketing, Sales, Operations, Finance and Profit Output;
-- lets an auditor review each problem, document evidence, attach files and assign a causal role;
-- calculates a rule-based Weighted Score and Priority Tier;
-- enforces a single Primary Constraint per audit;
-- lets the auditor select the small set of findings that should appear in the client report;
-- records strengths that should not be broken during implementation;
-- builds a phased action roadmap;
-- generates an English PDF client report and a complete CSV audit register.
+## Screenshots
 
-## Interface languages
+### Overview
 
-The internal interface supports:
+![Overview](assets/screenshots/06_overview.png)
 
-- English
-- Ukrainian
+The overview shows audit progress and the current state of each part of the business flow.
 
-Use the two flag buttons in the top-right corner of every page to switch the interface.
+### Audits
 
-The **client report is always generated in English**, regardless of the current interface language.
+![Audits](assets/screenshots/01_audits.png)
 
-## Important product boundaries
+The main page contains saved audits and allows a new audit to be created.
 
-This version deliberately does **not** pretend to automate expert judgement.
+### Client Profile
 
-- Attachments are stored and linked to a Problem ID, but they are not automatically read or analysed.
-- The auditor decides whether an issue is Confirmed, Suspected, Not Present or Not Applicable.
-- The auditor assigns the Causal Role.
-- The auditor selects the single Primary Constraint.
-- The score supports prioritization; it does not prove causality by itself.
+![Client Profile](assets/screenshots/02_client_profile.png)
 
-The core methodology is therefore:
+The client profile stores basic business context, business model, target customer, sales process, baseline metrics and data availability.
 
-**Evidence → Causal Analysis → Priority → Action**
+### Diagnosis
 
-## Prioritization logic
+![Diagnosis](assets/screenshots/03_diagnosis.png)
 
-The base impact score uses four client-specific factors:
+This is the main audit workspace.
 
-```text
-(Revenue Impact × 35 + Flow Restriction × 30 + Urgency × 20 + Scale Risk × 15) ÷ 5
-```
+The current diagnostic library contains 175 possible problems divided across:
 
-Bonuses:
+* Marketing
+* Sales
+* Operations
+* Finance
+* Profit Output
 
-- `+12` if the problem is selected as the Primary Constraint;
-- `+8` for Red base criticality;
-- `+4` for Yellow base criticality.
+For each problem, the auditor can record its status, evidence, impact, confidence, causal role and recommendation.
 
-Then the score is multiplied by:
+### Findings and Roadmap
 
-- Status multiplier;
-- Evidence Strength multiplier;
-- auditor Confidence.
+![Findings](assets/screenshots/04_findings.png)
 
-The final score is capped at `100`.
+After the diagnosis, the auditor selects the most important findings, identifies one Primary Constraint and creates a sequence of actions.
 
-Priority Tiers:
+### Report
 
-```text
-P1 — Primary Constraint
-P2 — Critical Revenue Leak
-P3 — Bottleneck / Stability
-P4 — Optimization / Monitor
-```
+![Report](assets/screenshots/05_report.png)
 
-See [`docs/scoring.md`](docs/scoring.md) for the complete rule set.
+The application generates an English PDF report with the main audit results and a separate full audit register.
 
-## Report output
+## Main features
 
-The application creates the PDF directly with Python. It does **not** rely on browser printing, so the exported report does not contain local file paths, browser dates or browser headers/footers.
+* create and save separate audits;
+* client profile and baseline metrics;
+* library of 175 diagnostic problems;
+* five business flows;
+* evidence and file attachments;
+* problem status tracking;
+* impact scoring;
+* Primary Constraint selection;
+* causal role classification;
+* key findings;
+* protected strengths;
+* optimization roadmap;
+* PDF report generation;
+* CSV audit register export;
+* English and Ukrainian interface.
 
-The report currently contains:
+## Prioritization
 
-1. Executive Summary
-2. Revenue Flow Map
-3. Flow Risk Profile
-4. Primary Constraint case
-5. Causal Chain
-6. Key Findings
-7. Protected Strengths
-8. Optimization Roadmap
-9. Audit Register appendix
+Problems can be evaluated using four factors:
 
-The report is intentionally more visual and selective than a raw audit spreadsheet. The full technical register remains available separately as CSV.
+* **Revenue Impact — 35%**
+* **Flow Restriction — 30%**
+* **Urgency — 20%**
+* **Scale Risk — 15%**
+
+The calculation also takes problem status, evidence strength and auditor confidence into account.
+
+The score helps with prioritization, but it does not automatically decide the root cause of a business problem. The auditor still determines the causal role and selects the Primary Constraint.
+
+More details can be found in [`docs/scoring.md`](docs/scoring.md).
+
+## Tech stack
+
+* Python
+* Streamlit
+* SQLite
+* ReportLab
+* JSON
 
 ## Project structure
 
 ```text
 velar-diagnostic-app/
-├── app.py                  # Streamlit interface
-├── db.py                   # SQLite schema, storage and scoring logic
-├── i18n.py                 # EN / UA interface localization
-├── reporting.py            # HTML preview, PDF report and CSV export
-├── sample_case.py          # synthetic development fixture
-├── seed_sample.py          # optional sample-data loader
+├── app.py
+├── db.py
+├── i18n.py
+├── reporting.py
+├── sample_case.py
+├── seed_sample.py
 ├── data/
-│   └── problem_library.json
 ├── docs/
-│   ├── architecture.md
-│   ├── scoring.md
-│   ├── report_logic.md
-│   └── sample_case.md
 ├── examples/
-│   └── sample_report.pdf
-├── uploads/
-│   └── .gitkeep
+├── assets/
+│   └── screenshots/
+├── tests/
 ├── requirements.txt
-├── run_velar.ps1
 ├── run_velar.bat
-└── README.md
+└── run_velar.ps1
 ```
 
-## Run on Windows
+## Running the project
 
-### Fastest way
+On Windows, the easiest option is:
 
-Double-click `run_velar.bat` in the project folder. It creates `.venv`, installs the dependencies and starts Streamlit without requiring a PowerShell execution-policy change.
+```text
+run_velar.bat
+```
 
-If you prefer PowerShell:
+The application will then be available at:
+
+```text
+http://localhost:8501
+```
+
+It can also be started through PowerShell:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\run_velar.ps1
 ```
 
-Then open:
+## Sample audit
 
-```text
-http://localhost:8501
-```
+I created a fictional case called **Northstar Home Services** to test the complete workflow without using real company data.
 
-### Manual run
-
-```powershell
-py -m venv .venv
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-.\.venv\Scripts\Activate.ps1
-py -m pip install -r requirements.txt
-py -m streamlit run app.py
-```
-
-SQLite is included with Python, so no paid database service is required for local use.
-
-## Optional synthetic sample
-
-The main UI starts clean and does not contain a “Create demo audit” button.
-
-For development, screenshots or testing, a synthetic Northstar sample can be seeded manually:
+It can be added to the local database with:
 
 ```powershell
 py seed_sample.py
 ```
 
-The fixture is stored separately in [`sample_case.py`](sample_case.py). It is not real client data and it is not generated by AI at runtime.
+A sample generated report is also included:
 
-A PDF produced from that fixture is included at [`examples/sample_report.pdf`](examples/sample_report.pdf).
+[`examples/sample_report.pdf`](examples/sample_report.pdf)
 
-## Storage
+## Current status
 
-Local development uses SQLite:
+This is the first functional version of the application.
 
-```text
-data/velar.db
-```
+The complete workflow from client profile to diagnosis, findings, roadmap and report is already implemented.
 
-That file is excluded from Git. Attachments are stored under `uploads/` and are also excluded from Git.
+The project still needs usability testing and interface simplification. File attachments are currently stored and linked to audit problems, but their contents are not analyzed automatically.
 
-For a future hosted multi-user version, persistent cloud storage and authentication would replace local SQLite/filesystem storage.
+My next priority would be improving the audit experience itself rather than adding more features.
 
-## Current limitations / next iteration
-
-The next product iteration should focus on simplification rather than adding more features:
-
-- reduce the number of fields visible by default;
-- move advanced scoring fields behind expandable sections;
-- improve navigation through the 175-problem library;
-- add structured Evidence Log records instead of only file attachments and summaries;
-- optionally parse supported data exports;
-- add stronger report editing/customization;
-- move from the prototype Streamlit UI to a dedicated frontend after workflow validation.
-
-## Documentation
-
-- [`docs/architecture.md`](docs/architecture.md) — application structure and data flow
-- [`docs/scoring.md`](docs/scoring.md) — scoring and priority logic
-- [`docs/report_logic.md`](docs/report_logic.md) — where each report section gets its data
-- [`docs/sample_case.md`](docs/sample_case.md) — synthetic sample and why it exists
