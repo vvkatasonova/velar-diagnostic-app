@@ -735,7 +735,11 @@ def recalculate_audit_progress(audit_id: int) -> None:
     diagnosis_pct = summary["checked"] / summary["total"] if summary["total"] else 0
     findings_pct = 1 if get_findings(audit_id) else 0
     roadmap_pct = 1 if list_roadmap_actions(audit_id) else 0
-    progress = round(diagnosis_pct * 100)
+    progress = round(
+    profile_pct * 15
+    + diagnosis_pct * 65
+    + findings_pct * 10
+    + roadmap_pct * 10)
     status = "Completed" if progress >= 100 and summary["primary_count"] == 1 else ("In progress" if progress > 0 else "Draft")
     update_audit_header(audit_id, progress=progress, status=status)
 
