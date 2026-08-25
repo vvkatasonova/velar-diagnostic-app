@@ -1,4 +1,4 @@
-$env:OPENBLAS_NUM_THREADS="1"
+.\run_velar.ps1$env:OPENBLAS_NUM_THREADS="1"
 $env:GOTO_NUM_THREADS="1"
 $env:OMP_NUM_THREADS="1"
 $env:MKL_NUM_THREADS="1"
