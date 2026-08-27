@@ -1,5 +1,7 @@
 # Velar Diagnostic App
 
+> **VELAR is the working title of an independently developed business diagnostic system.**
+
 Velar Diagnostic App is a prototype of an internal tool I built for conducting structured business audits.
 
 The project started as an Excel diagnostic playbook. I wanted to move the same workflow into a web application so that audits could be created, stored, reviewed and turned into a client report in one place.
@@ -26,9 +28,9 @@ The main page contains saved audits and allows a new audit to be created.
 
 ### Client Profile
 
-![Client Profile](assets/screenshots/02_client_profile.png)
+![Client Profile](docs/images/client_profile.png)
 
-The client profile stores basic business context, business model, target customer, sales process, baseline metrics and data availability.
+The client profile stores business context, business model, target customer, sales process, baseline metrics, audit scope and data availability.
 
 ### Diagnosis
 
@@ -38,52 +40,77 @@ This is the main audit workspace.
 
 The current diagnostic library contains 175 possible problems divided across:
 
-* Marketing
-* Sales
-* Operations
-* Finance
-* Profit Output
+- Marketing
+- Sales
+- Operations
+- Finance
+- Profit Output
 
 For each problem, the auditor can record its status, evidence, impact, confidence, causal role and recommendation.
 
 ### Findings and Roadmap
 
-![Findings](assets/screenshots/04_findings.png)
+![Findings](docs/images/key_findings.png)
 
 After the diagnosis, the auditor selects the most important findings, identifies one Primary Constraint and creates a sequence of actions.
 
 ### Report
 
-![Report](assets/screenshots/05_report.png)
+![Report](docs/images/report_preview.png)
 
 The application generates an English PDF report with the main audit results and a separate full audit register.
 
+## Real-business pilot validation
+
+The diagnostic workflow was tested through an anonymous pilot audit of an operating independent tattoo studio in Ukraine.
+
+The pilot was based on a structured written interview with the business owner and five additional clarification questions.
+
+During the pilot:
+
+- 12 of 175 relevant diagnostic hypotheses were reviewed;
+- 4 findings were confirmed with documented evidence;
+- one Primary Constraint was selected among the reviewed hypotheses;
+- a ten-page diagnostic report was generated;
+- a phased optimization roadmap was created.
+
+After reviewing the report, the business owner confirmed that the identified constraint and conclusions corresponded to the real situation in the studio.
+
+She considered the recommendations logical, realistic and suitable for gradual implementation, while noting that some actions would need to be adapted to the studio’s capacity and working schedule.
+
+The pilot validates the diagnostic workflow, relevance of the prioritization and practical usability of the recommendations.
+
+It does not yet demonstrate measured financial impact because the proposed actions have not been implemented and monitored over time.
+
+- [View the anonymized pilot interview and validation evidence](docs/pilot_validation_evidence.pdf)
+- [View the generated pilot diagnostic report](examples/pilot_diagnostic_report.pdf)
+
 ## Main features
 
-* create and save separate audits;
-* client profile and baseline metrics;
-* library of 175 diagnostic problems;
-* five business flows;
-* evidence and file attachments;
-* problem status tracking;
-* impact scoring;
-* Primary Constraint selection;
-* causal role classification;
-* key findings;
-* protected strengths;
-* optimization roadmap;
-* PDF report generation;
-* CSV audit register export;
-* English and Ukrainian interface.
+- create and save separate audits;
+- client profile and baseline metrics;
+- library of 175 diagnostic problems;
+- five connected business flows;
+- evidence and file attachments;
+- problem status tracking;
+- impact scoring;
+- Primary Constraint selection;
+- causal role classification;
+- key findings;
+- protected strengths;
+- optimization roadmap;
+- PDF report generation;
+- CSV audit register export;
+- English and Ukrainian interface.
 
 ## Prioritization
 
 Problems can be evaluated using four factors:
 
-* **Revenue Impact — 35%**
-* **Flow Restriction — 30%**
-* **Urgency — 20%**
-* **Scale Risk — 15%**
+- **Revenue Impact — 35%**
+- **Flow Restriction — 30%**
+- **Urgency — 20%**
+- **Scale Risk — 15%**
 
 The calculation also takes problem status, evidence strength and auditor confidence into account.
 
@@ -91,13 +118,31 @@ The score helps with prioritization, but it does not automatically decide the ro
 
 More details can be found in [`docs/scoring.md`](docs/scoring.md).
 
+## Product boundaries
+
+The application does not claim to analyse an entire business automatically.
+
+- The auditor determines whether a problem is Confirmed, Suspected, Not Present or Not Applicable.
+- The auditor records and evaluates the available evidence.
+- The auditor assigns the causal role.
+- The auditor selects the single Primary Constraint.
+- The score supports prioritization but does not prove causality by itself.
+- Conclusions must remain limited to the available evidence and audit scope.
+- Uploaded attachments are stored and linked to problems, but their contents are not interpreted automatically.
+
+The core methodology is:
+
+**Evidence → Causal Analysis → Priority → Action**
+
 ## Tech stack
 
-* Python
-* Streamlit
-* SQLite
-* ReportLab
-* JSON
+- Python
+- Streamlit
+- SQLite
+- ReportLab
+- JSON
+
+The prototype runs locally and does not require paid infrastructure or external AI services.
 
 ## Project structure
 
@@ -111,7 +156,11 @@ velar-diagnostic-app/
 ├── seed_sample.py
 ├── data/
 ├── docs/
+│   ├── images/
+│   └── pilot_validation_evidence.pdf
 ├── examples/
+│   ├── sample_report.pdf
+│   └── pilot_diagnostic_report.pdf
 ├── assets/
 │   └── screenshots/
 ├── tests/
@@ -141,33 +190,45 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\run_velar.ps1
 ```
 
-## Sample audit
+SQLite is included with Python. Local audit data are stored in `data/velar.db`, which is excluded from Git.
 
-I created a fictional case called **Northstar Home Services** to test the complete workflow without using real company data.
+## Synthetic sample audit
+
+The repository contains a fictional case called **Northstar Home Services** for testing the complete workflow without using real company data.
 
 It can be added to the local database with:
 
-```powershell
+```text
 py seed_sample.py
 ```
 
-A sample generated report is also included:
+A sample generated report is included here:
 
 [`examples/sample_report.pdf`](examples/sample_report.pdf)
 
+The synthetic case is separate from the anonymous real-business pilot described above.
+
 ## Current status
 
-This is the first functional version of the application.
+This is a functional prototype of the application.
 
-The complete workflow from client profile to diagnosis, findings, roadmap and report is already implemented.
+The complete workflow from client profile to diagnosis, findings, roadmap and report is implemented.
 
-The project still needs usability testing and interface simplification. File attachments are currently stored and linked to audit problems, but their contents are not analyzed automatically.
+The workflow has been tested through one anonymous real-business pilot. The pilot confirmed that the system can transform a structured owner interview into prioritized findings and a practical roadmap.
 
-My next priority would be improving the audit experience itself rather than adding more features.
+The project still needs:
+
+- validation across additional businesses and industries;
+- usability testing and interface simplification;
+- stronger supporting evidence beyond owner interviews;
+- measurement of implementation results over time.
+
+My next priority would be improving the audit experience and expanding validation rather than adding unnecessary automation.
 
 ## License
 
 Copyright © 2026 Veronika Katasonova. All rights reserved.
 
-This repository is shared for portfolio and evaluation purposes.  
-No permission is granted to redistribute, modify, or use the project commercially.
+This repository is shared for portfolio and evaluation purposes.
+
+No permission is granted to redistribute, modify or use the project commercially.
