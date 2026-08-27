@@ -85,6 +85,8 @@ It does not yet demonstrate measured financial impact because the proposed actio
 - [View the anonymized pilot interview and validation evidence](docs/pilot_validation_evidence.pdf)
 - [View the generated pilot diagnostic report](examples/VELAR_Anonymous_Independent_Tattoo_Studio_Report.pdf)
 
+- [Methodology and venture background](docs/methodology_and_venture.md)
+  
 ## Main features
 
 - create and save separate audits;
