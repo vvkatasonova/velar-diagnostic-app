@@ -52,6 +52,16 @@ class VelarCoreTests(unittest.TestCase):
         self.assertTrue(pdf.startswith(b"%PDF"))
         self.assertGreater(len(pdf), 10_000)
 
+    def test_partially_checked_flow_is_not_reported_as_stable(self) -> None:
+        audit_id = db.create_audit("Scoped Client", "Scoped Audit", "Services")
+        db.save_audit_problem(audit_id, "F-D04", {
+            "status": "Not Present",
+            "evidence_strength": "Moderate",
+            "confidence": 75,
+        })
+        finance = next(x for x in db.dashboard_summary(audit_id)["by_flow"] if x["flow"] == "Finance")
+        self.assertEqual(finance["status"], "Limited Assessment")
+
 
 if __name__ == "__main__":
     unittest.main()
