@@ -714,6 +714,10 @@ def dashboard_summary(audit_id: int) -> dict[str, Any]:
             flow_status = "Critical / High Priority"
         elif any(x["status"] in {"Confirmed", "Suspected"} for x in subset):
             flow_status = "At Risk"
+        elif flow_checked < len(subset):
+            # A handful of negative checks cannot establish that an entire
+            # diagnostic flow is stable. Keep the map honest for scoped pilots.
+            flow_status = "Limited Assessment"
         else:
             flow_status = "Stable / No Finding"
         by_flow.append({"flow": flow, "checked": flow_checked, "total": len(subset), "status": flow_status,
@@ -735,11 +739,7 @@ def recalculate_audit_progress(audit_id: int) -> None:
     diagnosis_pct = summary["checked"] / summary["total"] if summary["total"] else 0
     findings_pct = 1 if get_findings(audit_id) else 0
     roadmap_pct = 1 if list_roadmap_actions(audit_id) else 0
-    progress = round(
-    profile_pct * 15
-    + diagnosis_pct * 65
-    + findings_pct * 10
-    + roadmap_pct * 10)
+    progress = round(profile_pct * 15 + diagnosis_pct * 65 + findings_pct * 10 + roadmap_pct * 10)
     status = "Completed" if progress >= 100 and summary["primary_count"] == 1 else ("In progress" if progress > 0 else "Draft")
     update_audit_header(audit_id, progress=progress, status=status)
 

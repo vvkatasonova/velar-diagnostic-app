@@ -25,6 +25,17 @@ def flow_status_class(status: str) -> str:
     return "unknown"
 
 
+def flow_status_label(status: str) -> str:
+    """Short labels that remain legible inside compact flow-map nodes."""
+    return {
+        "Critical / High Priority": "Critical",
+        "At Risk": "At risk",
+        "Limited Assessment": "Limited",
+        "Stable / No Finding": "Stable",
+        "Not Assessed": "Not assessed",
+    }.get(status, status)
+
+
 def build_audit_register_csv(audit_id: int) -> bytes:
     items = db.list_audit_problems(audit_id)
     output = io.StringIO()
@@ -71,7 +82,7 @@ def build_report_html(audit_id: int) -> str:
     for flow in FLOW_LABELS:
         row = flow_map.get(flow, {"status": "Not Assessed", "checked": 0, "total": 0, "max_score": 0})
         cls = flow_status_class(row["status"])
-        marker = "PRIMARY CONSTRAINT" if primary and primary["flow_en"] == flow else row["status"]
+        marker = "PRIMARY CONSTRAINT" if primary and primary["flow_en"] == flow else flow_status_label(row["status"])
         pipe_nodes.append(
             f"""
             <div class="pipe-node {cls} {'constraint-node' if primary and primary['flow_en']==flow else ''}">
@@ -245,7 +256,7 @@ p{{color:#3f4948}} .cover{{display:flex;flex-direction:column;justify-content:sp
 <section class="page cover"><div><div class="eyebrow">VELAR · DIAGNOSTIC STANDARD</div><h1>{esc(profile.get('report_title') or 'Velar Efficiency Audit')}</h1><p style="font-size:20px">{esc(audit.get('client_name'))}</p></div>
 <div class="cover-meta"><div><span class="label">Audit</span>{esc(audit.get('audit_name'))}</div><div><span class="label">Prepared by</span>{esc(profile.get('auditor') or 'Velar')}</div><div><span class="label">Market</span>{esc(profile.get('market_geography'))}</div><div><span class="label">Version</span>{esc(profile.get('audit_version'))}</div></div></section>
 <section class="page"><div class="eyebrow">01 · EXECUTIVE SUMMARY</div><h2>What currently limits the business flow</h2><p style="font-size:18px">{esc(executive_summary)}</p>
-<div class="grid">{metric_cards_html}</div><h3>Diagnostic result</h3><div class="grid"><div class="metric-card"><span>Primary flow</span><b>{esc(primary_flow)}</b></div><div class="metric-card"><span>Primary constraint</span><b style="font-size:17px">{esc(primary_title)}</b></div><div class="metric-card"><span>Checked</span><b>{checked_count}/{summary['total']}</b></div><div class="metric-card"><span>Evidence coverage</span><b>{summary['evidence_coverage']}%</b></div></div></section>
+<div class="grid">{metric_cards_html}</div><h3>Diagnostic result</h3><div class="grid"><div class="metric-card"><span>Primary flow</span><b>{esc(primary_flow)}</b></div><div class="metric-card"><span>Primary constraint</span><b style="font-size:17px">{esc(primary_title)}</b></div><div class="metric-card"><span>Checked</span><b>{checked_count}/{summary['total']}</b></div><div class="metric-card"><span>Confirmed findings with evidence</span><b>{summary['evidence_coverage']}%</b></div></div></section>
 <section class="page"><div class="eyebrow">02 · REVENUE FLOW MAP</div><h2>Where the flow slows, leaks or becomes unstable</h2><div class="pipe">{''.join(pipe_nodes)}</div><div class="risk-profile"><span class="label">Flow risk profile · maximum weighted score by flow</span>{flow_profile_html}</div>
 <div class="scope-grid" style="margin-top:24px"><div class="scope-card"><span class="label">Business model</span>{esc(profile.get('business_model'))}<br><br><span class="label">Main offer</span>{esc(profile.get('main_offer'))}<br><br><span class="label">Target customer</span>{esc(profile.get('target_customer'))}</div><div class="scope-card"><span class="label">Audit scope</span>{esc(profile.get('audit_scope'))}<br><br><span class="label">Access limitations</span>{esc(profile.get('access_limitations'))}</div></div></section>
 <section class="page"><div class="eyebrow">03 · PRIMARY CONSTRAINT CASE</div><h2>Why this issue was selected first</h2><div class="primary-box"><div><span class="label">Primary constraint</span><div class="primary-title">{esc(primary_title)}</div><p>{esc(primary.get('simple_meaning') if primary else '')}</p><span class="label">Evidence summary</span><p>{esc(primary.get('evidence_summary') if primary else 'Not selected')}</p><span class="label">Business consequence</span><p>{esc(primary.get('client_consequence') if primary else '')}</p></div><div><span class="label">Why we are confident</span><ul>{primary_proof or '<li>Primary constraint has not been selected.</li>'}</ul><div class="grid" style="grid-template-columns:1fr 1fr"><div class="metric-card"><span>Confidence</span><b>{esc(confidence)}</b></div><div class="metric-card"><span>Evidence</span><b>{esc(evidence_strength)}</b></div></div></div></div></section>
@@ -336,16 +347,28 @@ def build_report_pdf(audit_id: int) -> bytes:
                 pass
 
     teal = colors.HexColor("#0F8F8C")
+    deep_teal = colors.HexColor("#0B6F6D")
     ink = colors.HexColor("#171B1B")
     muted = colors.HexColor("#687271")
     line = colors.HexColor("#DCE5E3")
     soft = colors.HexColor("#F4F8F7")
+    mint = colors.HexColor("#E9F5F3")
     red = colors.HexColor("#BB454C")
     amber = colors.HexColor("#B57B18")
     green = colors.HexColor("#287E59")
 
     def footer(canvas, report_doc):
         canvas.saveState()
+        if report_doc.page == 1:
+            canvas.setFillColor(mint)
+            canvas.rect(0, 0, page_w, page_h, stroke=0, fill=1)
+            canvas.setFillColor(deep_teal)
+            canvas.rect(0, page_h - 4 * mm, page_w, 4 * mm, stroke=0, fill=1)
+        else:
+            canvas.setFillColor(colors.HexColor("#FBFCFC"))
+            canvas.rect(0, 0, page_w, page_h, stroke=0, fill=1)
+            canvas.setFillColor(teal)
+            canvas.rect(0, page_h - 2.2 * mm, page_w, 2.2 * mm, stroke=0, fill=1)
         canvas.setStrokeColor(line)
         canvas.line(left, 11 * mm, page_w - right, 11 * mm)
         canvas.setFont(regular_font, 7)
@@ -366,6 +389,9 @@ def build_report_pdf(audit_id: int) -> bytes:
     SCORE = ParagraphStyle("SCORE", parent=H3, alignment=TA_CENTER)
     WHITE = ParagraphStyle("WHITE", parent=BODY, fontName=bold_font, textColor=colors.white, alignment=TA_CENTER)
     EYEBROW = ParagraphStyle("EYEBROW", parent=LABEL, textColor=teal, fontSize=7.6, leading=10)
+    COVER_H1 = ParagraphStyle("COVER_H1", parent=H1, alignment=0, fontSize=31, leading=35, spaceBefore=0, spaceAfter=10)
+    COVER_CLIENT = ParagraphStyle("COVER_CLIENT", parent=BODY, alignment=0, fontSize=13, leading=17, textColor=ink, spaceAfter=0)
+    COVER_VALUE = ParagraphStyle("COVER_VALUE", parent=BODY, fontName=bold_font, fontSize=10, leading=13, textColor=ink, spaceAfter=0)
 
     def P(value: Any, style=BODY) -> Paragraph:
         return Paragraph(html.escape(_pdf_safe(value)), style)
@@ -376,22 +402,29 @@ def build_report_pdf(audit_id: int) -> bytes:
     story = []
 
     # Cover
-    story += [Spacer(1, 27 * mm), P("VELAR | DIAGNOSTIC REPORT", EYEBROW),
-              P(profile.get("report_title") or "Velar Efficiency Audit", H1),
-              P(audit.get("client_name"), ParagraphStyle("CLIENT", parent=BODY, fontSize=16, leading=20, textColor=ink)),
-              Spacer(1, 42 * mm)]
+    story += [Spacer(1, 15 * mm), P("VELAR | DIAGNOSTIC STANDARD", EYEBROW),
+              Spacer(1, 4 * mm),
+              P(profile.get("report_title") or "Velar Efficiency Audit", COVER_H1),
+              P(audit.get("client_name"), COVER_CLIENT),
+              Spacer(1, 7 * mm)]
+    story += [Table([[""]], colWidths=[usable_w], rowHeights=[0.7], style=[("BACKGROUND", (0,0), (-1,-1), colors.HexColor("#C7DEDA"))]), Spacer(1, 9 * mm)]
+
+    def cover_field(label: str, value: Any) -> list:
+        return [P(label, LABEL), Spacer(1, 1.5 * mm), P(value or "-", COVER_VALUE)]
+
     cover = Table([
-        [P("AUDIT", LABEL), P("PREPARED BY", LABEL)],
-        [P(audit.get("audit_name")), P(profile.get("auditor") or "Velar")],
-        [P("MARKET", LABEL), P("VERSION", LABEL)],
-        [P(profile.get("market_geography") or "-"), P(profile.get("audit_version") or "1.0")],
+        [cover_field("AUDIT", audit.get("audit_name")), cover_field("PREPARED BY", profile.get("auditor") or "Velar")],
+        [cover_field("MARKET", profile.get("market_geography") or "-"), cover_field("VERSION", profile.get("audit_version") or "1.0")],
     ], colWidths=[usable_w/2]*2)
     cover.setStyle(TableStyle([
-        ("BOX",(0,0),(-1,-1),0.6,line),("INNERGRID",(0,0),(-1,-1),0.35,line),
-        ("VALIGN",(0,0),(-1,-1),"TOP"),("LEFTPADDING",(0,0),(-1,-1),9),("RIGHTPADDING",(0,0),(-1,-1),9),
-        ("TOPPADDING",(0,0),(-1,-1),8),("BOTTOMPADDING",(0,0),(-1,-1),8),
+        ("BACKGROUND",(0,0),(-1,-1),colors.white),("BOX",(0,0),(-1,-1),0.7,colors.HexColor("#C7DEDA")),
+        ("INNERGRID",(0,0),(-1,-1),0.45,colors.HexColor("#D6E7E4")),
+        ("VALIGN",(0,0),(-1,-1),"TOP"),("LEFTPADDING",(0,0),(-1,-1),12),("RIGHTPADDING",(0,0),(-1,-1),12),
+        ("TOPPADDING",(0,0),(-1,-1),11),("BOTTOMPADDING",(0,0),(-1,-1),11),
     ]))
-    story += [cover, PageBreak()]
+    story += [cover, Spacer(1, 24 * mm),
+              P("Evidence-led diagnosis | Prioritized constraints | Actionable roadmap", ParagraphStyle("COVER_TAG", parent=SMALL, textColor=deep_teal, fontSize=8.2, leading=11)),
+              PageBreak()]
 
     # Executive summary
     story += section("01 | EXECUTIVE SUMMARY", "What currently limits the business flow")
@@ -418,7 +451,7 @@ def build_report_pdf(audit_id: int) -> bytes:
     ]))
     story += [metrics_table, Spacer(1, 5*mm)]
     result = Table([
-        [P("PRIMARY FLOW", LABEL), P("PRIMARY CONSTRAINT", LABEL), P("CHECKED", LABEL), P("EVIDENCE COVERAGE", LABEL)],
+        [P("PRIMARY FLOW", LABEL), P("PRIMARY CONSTRAINT", LABEL), P("CHECKED", LABEL), P("CONFIRMED FINDINGS WITH EVIDENCE", LABEL)],
         [P(primary["flow_en"] if primary else "-", H3), P(primary_title, H3), P(f"{summary['checked']}/{summary['total']}", H3), P(f"{summary['evidence_coverage']}%", H3)],
     ], colWidths=[usable_w/4]*4)
     result.setStyle(TableStyle([
@@ -445,7 +478,7 @@ def build_report_pdf(audit_id: int) -> bytes:
         if primary and primary["flow_en"] == flow: border = red
         drawing.add(Rect(x, y, node_w, 40, 7, strokeColor=border, fillColor=fill, strokeWidth=1.1))
         drawing.add(String(x+node_w/2, y+26, _pdf_safe(flow), fontName=bold_font, fontSize=7.5, textAnchor="middle", fillColor=ink))
-        marker = "PRIMARY" if primary and primary["flow_en"] == flow else _pdf_safe(status)[:18]
+        marker = "PRIMARY" if primary and primary["flow_en"] == flow else flow_status_label(status)
         drawing.add(String(x+node_w/2, y+14, marker, fontName=regular_font, fontSize=5.4, textAnchor="middle", fillColor=muted))
         drawing.add(String(x+node_w/2, y+5, f"{row['checked']}/{row['total']} | score {row['max_score']}", fontName=regular_font, fontSize=5.2, textAnchor="middle", fillColor=muted))
         if idx < 4:
@@ -569,16 +602,40 @@ def build_report_pdf(audit_id: int) -> bytes:
         if not actions:
             continue
         has_actions = True
-        story += [P(phase, H3)]
-        rows = [[P("ACTION", LABEL),P("ISSUES", LABEL),P("METRIC", LABEL),P("BASELINE", LABEL),P("TARGET", LABEL),P("OWNER", LABEL)]]
-        for a in actions:
-            rows.append([P(a["action"]),P(a["related_problem_ids"]),P(a["success_metric"]),P(a["baseline"]),P(a["target"]),P(a["owner"])])
-        table = Table(rows, colWidths=[usable_w*.30,usable_w*.13,usable_w*.18,usable_w*.12,usable_w*.14,usable_w*.13], repeatRows=1)
-        table.setStyle(TableStyle([
-            ("BOX",(0,0),(-1,-1),0.5,line),("INNERGRID",(0,0),(-1,-1),0.3,line),("BACKGROUND",(0,0),(-1,0),soft),
-            ("VALIGN",(0,0),(-1,-1),"TOP"),("LEFTPADDING",(0,0),(-1,-1),5),("RIGHTPADDING",(0,0),(-1,-1),5),("TOPPADDING",(0,0),(-1,-1),6),("BOTTOMPADDING",(0,0),(-1,-1),6),
-        ]))
-        story += [table, Spacer(1, 4*mm)]
+        for action_index, a in enumerate(actions):
+            meta = Table([
+                [P("RELATED ISSUES", LABEL), P("OWNER", LABEL), P("EFFORT", LABEL), P("TARGET DATE", LABEL), P("STATUS", LABEL)],
+                [P(a["related_problem_ids"] or "-", SMALL), P(a["owner"] or "-", SMALL),
+                 P(a["effort"] or "-", SMALL), P(a["target_date"] or "-", SMALL), P(a["status"] or "Not Started", SMALL)],
+            ], colWidths=[usable_w*.30, usable_w*.20, usable_w*.10, usable_w*.20, usable_w*.20])
+            meta.setStyle(TableStyle([
+                ("BACKGROUND",(0,0),(-1,0),soft),("BOX",(0,0),(-1,-1),0.45,line),("INNERGRID",(0,0),(-1,-1),0.25,line),
+                ("VALIGN",(0,0),(-1,-1),"TOP"),("LEFTPADDING",(0,0),(-1,-1),6),("RIGHTPADDING",(0,0),(-1,-1),6),
+                ("TOPPADDING",(0,0),(-1,-1),5),("BOTTOMPADDING",(0,0),(-1,-1),5),
+            ]))
+            measures = Table([
+                [P("SUCCESS METRIC", LABEL), P("BASELINE", LABEL), P("TARGET", LABEL)],
+                [P(a["success_metric"] or "-", SMALL), P(a["baseline"] or "-", SMALL), P(a["target"] or "-", SMALL)],
+            ], colWidths=[usable_w*.34, usable_w*.33, usable_w*.33])
+            measures.setStyle(TableStyle([
+                ("BACKGROUND",(0,0),(-1,0),soft),("BOX",(0,0),(-1,-1),0.45,line),("INNERGRID",(0,0),(-1,-1),0.25,line),
+                ("VALIGN",(0,0),(-1,-1),"TOP"),("LEFTPADDING",(0,0),(-1,-1),6),("RIGHTPADDING",(0,0),(-1,-1),6),
+                ("TOPPADDING",(0,0),(-1,-1),5),("BOTTOMPADDING",(0,0),(-1,-1),5),
+            ]))
+            action_block = [
+                P(a["action"], H3), meta, Spacer(1, 2*mm),
+                P("EXPECTED IMPACT", LABEL), P(a["expected_impact"] or "Not documented", SMALL),
+                measures,
+            ]
+            if action_index == 0:
+                # Keep a phase heading with its first action instead of leaving
+                # the heading orphaned at the bottom of a page.
+                action_block.insert(0, P(phase, H3))
+            if a.get("dependency"):
+                action_block += [Spacer(1, 1.5*mm), P("DEPENDENCY", LABEL), P(a["dependency"], SMALL)]
+            if a.get("notes"):
+                action_block += [P("NOTES / SCOPE", LABEL), P(a["notes"], SMALL)]
+            story += [KeepTogether(action_block), Spacer(1, 5*mm)]
     if not has_actions:
         story += [P("Roadmap has not been created yet.")]
     story += [PageBreak()]
