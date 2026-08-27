@@ -83,7 +83,7 @@ The pilot validates the diagnostic workflow, relevance of the prioritization and
 It does not yet demonstrate measured financial impact because the proposed actions have not been implemented and monitored over time.
 
 - [View the anonymized pilot interview and validation evidence](docs/pilot_validation_evidence.pdf)
-- [View the generated pilot diagnostic report](examples/pilot_diagnostic_report.pdf)
+- [View the generated pilot diagnostic report](examples/VELAR_Anonymous_Independent_Tattoo_Studio_Report.pdf)
 
 ## Main features
 
@@ -160,7 +160,7 @@ velar-diagnostic-app/
 │   └── pilot_validation_evidence.pdf
 ├── examples/
 │   ├── sample_report.pdf
-│   └── pilot_diagnostic_report.pdf
+│   └── VELAR_Anonymous_Independent_Tattoo_Studio_Report.pdf
 ├── assets/
 │   └── screenshots/
 ├── tests/
